@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "pydantic-settings-external"
+version = "0.1.0"
+description = ""
+authors = ["Ali Aliyev <ali@aliev.me>"]
+readme = "README.md"
+packages = [{include = "pydantic_settings_external"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
