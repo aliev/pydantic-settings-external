@@ -49,7 +49,7 @@ gcp_provider = GcpProvider(google_project_id)
 class Settings(with_settings_external(gcp_provider)):
     MY_SECRET_API_KEY: str = Field(
         json_schema_extra={
-            {"gcp": "key": "my-secret-api-key"}
+            {"gcp": {"key": "my-secret-api-key"}}
         }
     )
 ```
