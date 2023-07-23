@@ -1,33 +1,42 @@
-from pydantic.fields import FieldInfo
+from pydantic import VERSION
+
+from pydantic_settings_external.types import Providers
+
+MAJOR_VERSION = VERSION.split('.')[0]
+
+if MAJOR_VERSION != '2':
+    raise ImportError('This package required Pydantic v2')
+
 from pydantic import BaseModel
-from pydantic_settings_external.providers.base import AbstractBaseProvider
+from pydantic.fields import FieldInfo
+
+from pydantic_settings_external.providers.base import BaseProvider
 
 try:
-    from pydantic_settings import PydanticBaseSettingsSource
+    from pydantic_settings.main import BaseSettings as PyDanticBaseSettings
     from pydantic_settings.sources import PydanticBaseSettingsSource
-    from pydantic_settings.main import BaseSettings
 except ImportError:
     raise ImportError(
-        "In order to use this package for Pydantic v2 it is required to install "
-        "pydantic-settings package. "
-        "Please install it using the following command: pip install pydantic-settings."
+        'In order to use this package for Pydantic v2 it is required to install '
+        'pydantic-settings package. '
+        'Please install it using the following command: pip install pydantic-settings.'
     )
 
-from typing import Any, Dict, Type, Tuple, cast
+from typing import Any, Dict, Tuple, Type, cast
 
 
 class ExternalSettingsSource(PydanticBaseSettingsSource):
     def __init__(
         self,
-        settings_cls: Type[BaseSettings],
-        provider: AbstractBaseProvider,
+        settings_cls: Type[PyDanticBaseSettings],
+        providers: Providers,
     ) -> None:
-        self.provider = provider
+        self.providers = providers
         super().__init__(settings_cls)
 
     def __repr__(self) -> str:
         return (
-            f"ExternalSettingsSource(provider={self.provider!r})"
+            f'ExternalSettingsSource(providers={self.providers!r})'
         )
 
     def get_field_value(self, field: FieldInfo, field_name: str) -> Tuple[Any, str, bool]:
@@ -57,8 +66,43 @@ class ExternalSettingsSource(PydanticBaseSettingsSource):
         return d
 
 
+class BaseSettings(PyDanticBaseSettings):
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: Type[PyDanticBaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource
+    ) -> Tuple[PydanticBaseSettingsSource, ...]:
+        providers = settings_cls.model_config.get('providers')
+
+        if providers is not None:
+            ...
+
+        return (
+            init_settings,
+            env_settings,
+            dotenv_settings,
+            file_secret_settings,
+            ExternalSettingsSource(settings_cls, providers)
+        )
+
+    class Config:
+        extra = 'allow'
+
+
+class MySettings(BaseSettings):
+
+    class Config:
+        providers = ['1', '2', '3']
+
+
+settings = MySettings()
+
 def with_external_provider_v2(
-    provider: AbstractBaseProvider,
+    provider: BaseProvider,
 ) -> Type[BaseModel]:
     class Settings(BaseSettings):
         @classmethod
@@ -79,6 +123,6 @@ def with_external_provider_v2(
             )
 
         class Config:
-            extra = "allow"
+            extra = 'allow'
 
     return Settings

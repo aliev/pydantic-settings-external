@@ -21,14 +21,33 @@ pip install pydantic-settings-external
 
 ```python
 
-from pydantic_settings_external.providers.gcp import GcpProvider, with_settings_external
-import os
+from pydantic import Field
+from pydantic_settings_external import BaseSettings
+from pydantic_settings_external.providers import GCPProvider, OnePasswordProvider
 
-google_project_id = os.getenv("GOOGLE_PROJECT_ID")
-gcp_provider = GcpProvider(google_project_id)
 
-class Settings(with_settings_external(gcp_provider)):
-    MY_SECRET_API_KEY: str = Field(gcp={"key": "my-secret-api-key"})
+class MySettings(BaseSettings):
+    SENDGRID_API_KEY: str = Field(..., provider={
+            "gcp": {
+                "name": "sendgrid-api-key",
+                "vesion": "latest",
+            }
+        }
+    )
+    ADMIN_USER: str = Field(..., provider={
+            "one_password": {
+                "field": "user",
+                "vault": "admin_credentials"
+            }
+        },
+    )
+
+    class Config:
+        providers = {
+            "gcp": GCPProvider(...),
+            "one_password": OnePasswordProvider(...),
+        }
+
 ```
 
 PyDantic v2.x
@@ -40,21 +59,34 @@ pip install pydantic-settings
 ```
 
 ```python
-from pydantic_settings_external.providers.gcp import GcpProvider, with_settings_external
-import os
 
-google_project_id = os.getenv("GOOGLE_PROJECT_ID")
-gcp_provider = GcpProvider(google_project_id)
+from pydantic import Field
+from pydantic_settings_external import BaseSettings
+from pydantic_settings_external.providers import GCPProvider, OnePasswordProvider
 
-class Settings(with_settings_external(gcp_provider)):
-    MY_SECRET_API_KEY: str = Field(
-        json_schema_extra={
-            {"gcp": {"key": "my-secret-api-key"}}
+
+class MySettings(BaseSettings):
+    SENDGRID_API_KEY: str = Field(..., json_schema_extra={
+        "provider": {
+            "gcp": {
+                "name": "sendgrid-api-key",
+                "vesion": "latest",
+            }
+        },
+    })
+    ADMIN_USER: str = Field(..., json_schema_extra={
+        "provider": {
+            "one_password": {
+                "field": "user",
+                "vault": "admin_credentials"
+            }
+        },
+    })
+
+    class Config:
+        providers = {
+            "gcp": GCPProvider(...),
+            "one_password": OnePasswordProvider(...),
         }
-    )
+
 ```
-
-
-Usage without `with_settings_external` helper
-
-TODO

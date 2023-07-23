@@ -1,22 +1,24 @@
-from pydantic_settings_external.providers.base import AbstractBaseProvider
+from typing import Any, Dict, Tuple, Type
+
 from pydantic import BaseModel, BaseSettings
 from pydantic.env_settings import SettingsSourceCallable
-from typing import Any, Dict, Type, Tuple
+
+from pydantic_settings_external.providers.base import BaseProvider
 
 
 class ExternalSettingsSource:
     def __init__(
         self,
-        provider: AbstractBaseProvider,
+        provider: BaseProvider,
     ) -> None:
         self.provider = provider
 
     def __repr__(self) -> str:
         return (
-            f"ExternalSettingsSource(provider={self.provider!r})"
+            f'ExternalSettingsSource(provider={self.provider!r})'
         )
 
-    def __call__(self, settings: BaseSettings) -> Dict[str, Any]:  # noqa C901
+    def __call__(self, settings: BaseSettings) -> Dict[str, Any]:  # C901
         d: Dict[str, Any] = {}
 
         for field in settings.__fields__.values():
@@ -30,7 +32,7 @@ class ExternalSettingsSource:
 
 
 def with_external_provider_v1(
-    provider: AbstractBaseProvider,
+    provider: BaseProvider,
 ) -> Type[BaseModel]:
     class Settings(BaseSettings):
         class Config:
