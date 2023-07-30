@@ -1,16 +1,9 @@
-from typing import Any, Dict, Optional, Protocol, TypedDict, runtime_checkable
-
-
-class ProviderSettings(TypedDict):
-    provider: str
-    """ The name of provider. """
-    options: Dict[str, Any]
-    """ The provider options. """
+from typing import Any, Dict, Optional, Protocol, Tuple, TypedDict, runtime_checkable
 
 
 @runtime_checkable
 class Provider(Protocol):
-    def get(self, options: Dict[str, Any]) -> Optional[str]:
+    def get(self, options: Dict[str, Any]) -> Optional[Any]:
         """Returns the value from external provider by key.
 
         Args:
@@ -21,5 +14,14 @@ class Provider(Protocol):
         """
 
 
-Providers = Dict[str, Provider]
+OptionsType = Dict[str, Any]
+
+
+class ProviderDict(TypedDict):
+    instance: Provider
+    options: OptionsType
+    hint: Optional[str]
+
+
+ProviderOptions = Tuple[Provider, OptionsType]
 """ Type of providers registry. """

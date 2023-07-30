@@ -2,7 +2,7 @@
 
 ## The project is currently under active development.
 
-PyDantic Settings External is a library that extends PyDantic Settings to support various types of external configuration providers, such as GCP Secret Manager and AWS Secrets Manager. PyDantic Settings External has been developed using a clear abstraction, allowing for easy extension to external configurations not yet incorporated into the library by the community.
+PyDantic Settings External extends PyDantic Settings to support various types of external configuration providers, such as GCP Secret Manager and AWS Secrets Manager. PyDantic Settings External has been developed using a clear abstraction, allowing for easy extension to external providers.
 
 Installation:
 
@@ -31,14 +31,16 @@ class MySettings(BaseSettings):
             "gcp": {
                 "name": "sendgrid-api-key",
                 "vesion": "latest",
-            }
+            },
+            "hint": "Here you can provide the hint.",
         }
     )
     ADMIN_USER: str = Field(..., provider={
             "one_password": {
                 "field": "user",
                 "vault": "admin_credentials"
-            }
+            },
+            "hint": "Here you can provide the hint.",
         },
     )
 
@@ -65,28 +67,23 @@ from pydantic_settings_external import BaseSettings
 from pydantic_settings_external.providers import GCPProvider, OnePasswordProvider
 
 
+gcp = GCPProvider(...)
+one_password = OnePasswordProvider(...)
+
+
 class MySettings(BaseSettings):
     SENDGRID_API_KEY: str = Field(..., json_schema_extra={
         "provider": {
-            "gcp": {
-                "name": "sendgrid-api-key",
-                "vesion": "latest",
-            }
+            "instance": gcp,
+            "options": {"name": "sendgrid-api-key", "vesion": "latest"},
+            "hint": "",
         },
     })
     ADMIN_USER: str = Field(..., json_schema_extra={
         "provider": {
-            "one_password": {
-                "field": "user",
-                "vault": "admin_credentials"
-            }
+            "instance": one_password,
+            "options": {"field": "user", "vault": "admin_credentials"},
+            "hint": "",
         },
     })
-
-    class Config:
-        providers = {
-            "gcp": GCPProvider(...),
-            "one_password": OnePasswordProvider(...),
-        }
-
 ```

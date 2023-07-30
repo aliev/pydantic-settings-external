@@ -1,53 +1,43 @@
-from typing import Any, Dict, Tuple, Type
+from pydantic_settings_external.version import PYDANTIC_MAJOR_VERSION
 
-from pydantic import BaseModel, BaseSettings
+if PYDANTIC_MAJOR_VERSION != "1":
+    raise ImportError("This package required Pydantic v1")
+
+from typing import Any, Dict, Tuple
+
+from pydantic import BaseSettings as PydanticBaseSettings
 from pydantic.env_settings import SettingsSourceCallable
 
-from pydantic_settings_external.providers.base import BaseProvider
+from pydantic_settings_external.exceptions import ProviderError
+from pydantic_settings_external.utils import get_field_value, log_error_msg
 
 
 class ExternalSettingsSource:
-    def __init__(
-        self,
-        provider: BaseProvider,
-    ) -> None:
-        self.provider = provider
-
-    def __repr__(self) -> str:
-        return (
-            f'ExternalSettingsSource(provider={self.provider!r})'
-        )
-
-    def __call__(self, settings: BaseSettings) -> Dict[str, Any]:  # C901
+    def __call__(self, settings: PydanticBaseSettings) -> Dict[str, Any]:  # C901
         d: Dict[str, Any] = {}
 
         for field in settings.__fields__.values():
-            if self.provider.name not in field.field_info.extra:
-                # NOTE: Skip if provider configuration is not in extra
+            try:
+                d[field.alias] = get_field_value(field.field_info.extra)
+            except ProviderError as exc:
+                log_error_msg(exc)
                 continue
-            field_provider_options = field.field_info.extra[self.provider.name]
-            d[field.alias] = self.provider.get(field_provider_options) or field.default
 
         return d
 
 
-def with_external_provider_v1(
-    provider: BaseProvider,
-) -> Type[BaseModel]:
-    class Settings(BaseSettings):
-        class Config:
-            @classmethod
-            def customise_sources(
-                cls,
-                init_settings: SettingsSourceCallable,
-                env_settings: SettingsSourceCallable,
-                file_secret_settings: SettingsSourceCallable,
-            ) -> Tuple[SettingsSourceCallable, ...]:
-                return (
-                    init_settings,
-                    env_settings,
-                    file_secret_settings,
-                    ExternalSettingsSource(provider),
-                )
-
-    return Settings
+class BaseSettings(PydanticBaseSettings):
+    class Config:
+        @classmethod
+        def customise_sources(
+            cls,
+            init_settings: SettingsSourceCallable,
+            env_settings: SettingsSourceCallable,
+            file_secret_settings: SettingsSourceCallable,
+        ) -> Tuple[SettingsSourceCallable, ...]:
+            return (
+                init_settings,
+                env_settings,
+                file_secret_settings,
+                ExternalSettingsSource(),
+            )

@@ -2,7 +2,7 @@
 name = "pydantic-settings-external"
 version = "0.1.0"
 description = "PyDantic Settings External is a library that extends PyDantic Settings to support various types of external configuration providers, such as GCP Secret Manager and AWS Secrets Manager. PyDantic Settings External has been developed using a clear abstraction, allowing for easy extension to external configurations not yet incorporated into the library by the community."
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 authors = [
   { name="Ali Aliyev", email="ali@aliev.me" },
 ]
@@ -23,24 +23,30 @@ classifiers = ['Development Status :: 5 - Production/Stable',
                'Topic :: Software Development :: Libraries :: Python Modules',
                'Topic :: Utilities']
 
-
-[build-system]
-requires = ['hatchling']
-build-backend = 'hatchling.build'
-
-[tool.hatch.version]
-path = 'pydantic_settings_external/version.py'
-
-[tool.ruff]
-line-length = 120
-extend-select = ['Q', 'RUF100', 'C90', 'UP', 'I', 'I001', 'I002', 'TD007']
-flake8-quotes = {inline-quotes = 'single', multiline-quotes = 'double'}
-mccabe = { max-complexity = 14 }
-isort = { known-first-party = ['pydantic_settings', 'tests'] }
-target-version = 'py37'
-
 [project.optional-dependencies]
 dev = [
   "pre-commit",
-  "ruff",
+  "wheel",
+  "twine",
+  "build",
+  "pytest",
+  "pytest-cov"
 ]
+
+[project.urls]
+"Homepage" = "https://github.com/aliev/pydantic-settings-external"
+"Bug Tracker" = "https://github.com/aliev/pydantic-settings-external/issues"
+
+[tool.isort]
+profile = "black"
+
+[tool.mypy]
+warn_no_return = false
+disallow_untyped_defs = false
+allow_redefinition = true
+
+[tool.flake8]
+max-line-length = 120
+
+[tool.pytest.ini_options]
+addopts = "-s --strict-markers -vv --cache-clear --maxfail=1 --cov=pydantic_settings_external --cov-report=term --cov-report=html --cov-branch --no-cov-on-fail"
