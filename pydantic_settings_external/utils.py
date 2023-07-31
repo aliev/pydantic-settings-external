@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 from pydantic_settings_external.exceptions import ErrorType, ProviderError
 from pydantic_settings_external.types import Provider, ProviderDict
@@ -78,7 +78,7 @@ def display_hint(hint: str):
     logger.info(hint)
 
 
-def get_field_value(field_extra: Optional[Dict[str, Any]] = None) -> str | None:
+def get_field_value(field_extra: Optional[Dict[str, Any]] = None) -> Union[str, None]:
     provider = validate_provider_field(field_extra)
     provider_instance = provider["instance"]
     provider_options = provider["options"]
