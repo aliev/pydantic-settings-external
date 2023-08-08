@@ -8,12 +8,10 @@ BaseSettings: Type[BaseModel]
 
 if PYDANTIC_MAJOR_VERSION == "1":
     from pydantic_settings_external.pydantic.v1 import BaseSettings as _BaseSettings
-    from pydantic_settings_external.pydantic.v1 import ExternalSettingsSource
 
     BaseSettings = _BaseSettings
 elif PYDANTIC_MAJOR_VERSION == "2":
     from pydantic_settings_external.pydantic.v2 import BaseSettings as _BaseSettings
-    from pydantic_settings_external.pydantic.v2 import ExternalSettingsSource
 
     BaseSettings = _BaseSettings
 else:
@@ -21,4 +19,4 @@ else:
         f"Installed version {PYDANTIC_VERSION} of PyDantic is not supporting."
     )
 
-__all__ = ("BaseSettings", "ExternalSettingsSource")
+__all__ = ("BaseSettings",)

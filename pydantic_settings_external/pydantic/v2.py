@@ -5,7 +5,7 @@ if PYDANTIC_MAJOR_VERSION != "2":
 
 from pydantic.fields import FieldInfo
 
-from pydantic_settings_external.exceptions import ProviderError
+from pydantic_settings_external.exceptions import ErrorType, ProviderError
 from pydantic_settings_external.utils import get_field_value, log_error_msg
 
 try:
@@ -25,7 +25,7 @@ class ExternalSettingsSource(PydanticBaseSettingsSource):
     def get_field_value(
         self, field: FieldInfo, field_name: str
     ) -> Tuple[Any, str, bool]:
-        return get_field_value(field.json_schema_extra), field_name, False
+        return get_field_value(field_name, field.json_schema_extra), field_name, False
 
     def __call__(self) -> Dict[str, Any]:
         d: Dict[str, Any] = {}
@@ -36,7 +36,11 @@ class ExternalSettingsSource(PydanticBaseSettingsSource):
                     field, field_name
                 )
             except ProviderError as exc:
-                log_error_msg(exc)
+                if exc.error_type is not ErrorType.PROVIDER_WAS_NOT_SPECIFIED:
+                    log_error_msg(exc)
+
+                if exc.error_type is ErrorType.INVALID_PROVIDER_INSTANCE:
+                    raise exc
                 continue
 
             field_value = self.prepare_field_value(

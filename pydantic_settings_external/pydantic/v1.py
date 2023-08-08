@@ -8,22 +8,26 @@ from typing import Any, Dict, Tuple
 from pydantic import BaseSettings as PydanticBaseSettings
 from pydantic.env_settings import SettingsSourceCallable
 
-from pydantic_settings_external.exceptions import ProviderError
+from pydantic_settings_external.exceptions import ErrorType, ProviderError
 from pydantic_settings_external.utils import get_field_value, log_error_msg
 
 
-class ExternalSettingsSource:
-    def __call__(self, settings: PydanticBaseSettings) -> Dict[str, Any]:  # C901
-        d: Dict[str, Any] = {}
+def external_settings_source(settings: PydanticBaseSettings) -> Dict[str, Any]:  # C901
+    d: Dict[str, Any] = {}
 
-        for field in settings.__fields__.values():
-            try:
-                d[field.alias] = get_field_value(field.field_info.extra)
-            except ProviderError as exc:
+    for field in settings.__fields__.values():
+        try:
+            d[field.alias] = get_field_value(field.name, field.field_info.extra)
+        except ProviderError as exc:
+            if exc.error_type is not ErrorType.PROVIDER_WAS_NOT_SPECIFIED:
                 log_error_msg(exc)
-                continue
 
-        return d
+            if exc.error_type is ErrorType.INVALID_PROVIDER_INSTANCE:
+                raise exc
+
+            continue
+
+    return d
 
 
 class BaseSettings(PydanticBaseSettings):
@@ -39,5 +43,5 @@ class BaseSettings(PydanticBaseSettings):
                 init_settings,
                 env_settings,
                 file_secret_settings,
-                ExternalSettingsSource(),
+                external_settings_source,
             )
